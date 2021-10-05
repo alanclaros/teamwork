@@ -1,0 +1,475 @@
+{% load jinja_tags %}
+{% load static %}
+
+<div class="row align-items-center">
+    <div class="col-sm-2">&nbsp;</div>
+    <div class="col-sm-8">
+        <!--div contenedor-->
+        <br>
+        <!--alerts-->
+        {% include 'partials/_alerts.html' %}
+
+        <form name="search" method="post" action="">
+            {% csrf_token %}
+            <table class="table3 w-100">
+                <tr>
+                    <th class="w-100 center" colspan="4">
+                        Opciones de Busqueda
+                    </th>
+                </tr>
+
+                <tr class="back1">
+                    <td class="right w-20">
+                        Actividad&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="search_actividad" id="search_actividad" class="form-control input h-35 w-95">
+                            <option value="0">--</option>
+                            {% for act in lista_actividades %}
+                            <option value="{{act.actividad_id}}" {% if act.actividad_id == session.search_actividad|add:0 %}selected{% endif %}>{{act.actividad}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="right w-20">
+                        Dpto&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <input type="text" name="search_departamento" id="search_departamento" class="form-control input w-80" value="{{ session.search_departamento }}" autocomplete="off">
+                    </td>
+                </tr>
+
+                <tr class="back2">
+                    <td colspan="4" class="center w-100">
+                        <button class="btn btn-primary btn-sm" name="search_button" onclick="sendSearchCalendario();">
+                            <i class="nav-icon fas fa-search"></i>&nbsp;&nbsp;Buscar
+                        </button>
+                        <input type="hidden" name="search_button_x" value="acc">
+                        <input type="hidden" name="module_x" value="{{module_x}}">
+                        <input type="hidden" name="search_periodo" value="{{periodo_actual}}">
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <br>
+        <div class="card card-primary collapsed-card">
+            <div class="card-header back_tabs">
+                Lista de Actividades
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body w-100 card_body_width">
+                <table class="table3 w-100">
+                    {% for actividad in lista_actividades %}
+                    <tr class="back{{forloop.counter|back_class_color:actividad.status_id.status_id}}" style="background-color: {{actividad.color_hex}};">
+                        <td class="left w-100" style="color: {{actividad.color_txt}};">
+                            {{actividad.actividad}}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
+        <table class="w-100 center">
+            <tr>
+                <td class="w-96 h-40 v-middle">
+                    Mes: <span id="span_periodo_actual">{{periodo_actual|get_show_periodo}}</span>
+                </td>
+                <td class="w-2 center h-40 v-middle">
+                    <button class="btn btn-primary btn-sm h-30" name="btn_ant" onclick="calendarioSearchPeriodo('{{periodo_ant}}');">
+                        <i class="nav-icon fas fa-angle-left">&nbsp;</i>
+                    </button>
+                </td>
+                <td class="w-2 center h-40 v-middle">
+                    <button class="btn btn-primary btn-sm h-30" name="btn_next" onclick="calendarioSearchPeriodo('{{periodo_next}}');">
+                        <i class="nav-icon fas fa-angle-right">&nbsp;</i>
+                    </button>
+                </td>
+            </tr>
+        </table>
+        <form name="formulario" method="POST" action="" onsubmit="return false;">
+            <table class="table_calendario w-100">
+                <tr>
+                    <th class="w-14 center">
+                        Lun
+                    </th>
+                    <th class="w-14 center">
+                        Mar
+                    </th>
+                    <th class="w-14 center">
+                        Mie
+                    </th>
+                    <th class="w-14 center">
+                        Jue
+                    </th>
+                    <th class="w-14 center">
+                        Vie
+                    </th>
+                    <th class="w-15 center">
+                        Sab
+                    </th>
+                    <th class="w-15 center">
+                        Dom
+                    </th>
+                </tr>
+
+                {% for semana in calendario %}
+                <tr class="back{{forloop.counter|back_class}}">
+                    {% for lunes in semana %}
+                    <td class="center w-{% if forloop.counter <= 5 %}14{% else %}15{% endif %} v-top">
+                        {% if lunes.existe == 1 %}
+                        <table class="table_calendario_interno w-100">
+                            <tr>
+                               <td class="calendario_dia right w-100 v-top backpedido pointer" {% if permisos.adicionar %}onclick="calendarioShowDia('{{lunes.dia}}');"{% endif %}>
+                                <i>{{lunes.dia}}</i>
+                               </td>
+                            </tr>
+                            {% for actividad in lunes.lista_actividades %}
+                                {% if actividad.status_id == inactivo %}
+                                    {# usuario del sistema confirma elimina, dep->elimina #}
+                                    {% if user_perfil.perfil_id.perfil_id != perfil_departamento or actividad.departamento_id == departamento.departamento_id %}
+                                        <tr class="pointer" onclick="calendarioConfirmarActividad('{{actividad.calendario_id}}', '{{lunes.dia}}-{{periodo_actual|get_show_periodo}}', '{{actividad.departamento}}', '{{actividad.hora_ini}}', '{{actividad.hora_fin}}', '{{user_perfil.perfil_id.perfil_id}}', '{{perfil_departamento}}', '{{actividad.actividad}}', '{{actividad.user_id_dpto}}');">
+                                            <td nowrap class="calendario_dia center w-100" style="background-color: #CCCCCC;">
+                                            <span class="font14" style="color: #000000;">{{actividad.hora_ini}}</span>
+                                            </td>
+                                        </tr>
+                                        <input type="hidden" id="detalle_{{actividad.calendario_id}}" value="{{actividad.detalle}}">
+                                    {% endif %}
+                                {% else %}
+                                <tr class="pointer" onclick="calendarioShowActividades('{{lunes.dia}}');">
+                                    <td nowrap class="calendario_dia center w-100" style="background-color: {{actividad.color_hex}};">
+                                    <span class="font14" style="color: {{actividad.color_txt}};">{{actividad.hora_ini}}</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </table>
+                        <!--modal listado de actividades-->
+                        <div class="modal fade" id="modalListado_{{lunes.dia}}" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document" id="modalListadoPosition_{{lunes.dia}}">
+                                <div class="modal-content">
+                                    <div class="modal-header modal_bg_primary h-45 v-top font14" id="modalHeader_{{lunes.dia}}">
+                                        <b>Lista de Actividades {{lunes.dia}}-{{periodo_actual|get_show_periodo}}</b>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span></button>
+                                    </div>
+                                    
+                                <table class="table_calendario w-100">
+                                    <tr>
+                                        <td class="w-100 left">
+                                            <div style="overflow-y: scroll; max-height:300px; min-height:100px;">
+                                            <table class="table_calendario w-100">
+                                                {% for actividad in lunes.lista_actividades %}
+                                                {% if user_perfil.perfil_id.perfil_id == perfil_departamento %}
+                                                    {% if actividad.status_id == activo %}
+                                                    <tr class="back{{forloop.counter|back_class}}">
+                                                        <td class="font14 w-100 left" style="background-color: {{actividad.color_hex}};">
+                                                            &nbsp;<span class="font14" style="color: {{actividad.color_txt}};">
+                                                                {{actividad.actividad}}, {% if actividad.departamento_codigo %}{{actividad.departamento_codigo}} {% endif %}({{actividad.hora_ini}} - {{actividad.hora_fin}}) {{actividad.detalle}}</span>
+                                                        </td>
+                                                    </tr>
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if actividad.status_id == activo %}
+                                                    <tr class="back{{forloop.counter|back_class}}">
+                                                        <td class="font14 w-90 left" style="background-color: {{actividad.color_hex}};">
+                                                            &nbsp;<span class="font14" style="color: {{actividad.color_txt}};" id="span_calendario_{{actividad.calendario_id}}">
+                                                                {{actividad.actividad}}, {% if actividad.departamento_codigo %}{{actividad.departamento_codigo}} {% endif %}({{actividad.hora_ini}} - {{actividad.hora_fin}}) {{actividad.detalle}}</span>
+                                                        </td>
+                                                        <td class="w-10 center">
+                                                            {% if permisos.eliminar == 1 %}
+                                                            <i class="nav-icon ico_modify_delete pointer fas fa-trash-alt" {% if permisos.eliminar %}onclick="calendarioEliminarShow('{{lunes.dia}}', '{{actividad.calendario_id}}', '{{actividad.departamento}}', '{{actividad.hora_ini}}', '{{actividad.hora_fin}}', '{{actividad.actividad}}', '{{actividad.user_id_dpto}}', '{{lunes.dia}}-{{periodo_actual|get_show_periodo}}');"{% endif %}></i>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endif %}
+                                                {% endif %}
+                                                {% endfor %}
+                                            </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    {% if user_perfil.perfil_id.perfil_id != perfil_departamento %}
+                                    <tr class="back1">
+                                        <td colspan="2" class="w-100 h-40 center font14">
+                                            <div id="div_resultado_listado_{{lunes.dia}}">&nbsp;</div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    
+                                    <tr>
+                                        <td class="w-100 right">
+                                            <button class="btn btn-secondary btn-sm" name="button_volver_listado_{{lunes.dia}}" id="button_volver_listado_{{lunes.dia}}" data-dismiss="modal">
+                                                <i class="nav-icon fas fa-arrow-left"></i>&nbsp;&nbsp;Volver
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}{# for de semana #}
+                    
+                </tr>
+                {% endfor %}{# for de calendario #}
+            </table>
+        </form>
+    </div>
+    
+    <!--modal crear nueva actividad-->
+    <div class="modal fade" id="modalActividad" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" id="modalActividadPosition">
+        <div class="modal-content">
+            <div class="modal-header modal_bg_primary h-45 v-top" id="modalHeader">
+                <b>Nueva Actividad, <span id="span_nueva_actividad_periodo">01-Ene</span></b>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+            </div>
+            
+        <table class="table_calendario w-100">
+            <tr class="back">
+                <td class="w-100 left">
+                    <table class="table_calendario w-100">
+                        <tr class="back1 h-40">
+                            <td class="w-30 right font14">
+                                Horario&nbsp;
+                            </td>
+                            <td class="w-70 left font14">
+                                <select id="hora_ini" class="form-control input w-18">
+                                    {% for hora in lista_horas %}
+                                    <option value="{{hora.hora}}">{{hora.hora}}</option>
+                                    {% endfor %}
+                                </select>
+                                <select id="minuto_ini" class="form-control input w-18">
+                                    {% for minuto in lista_minutos %}
+                                    <option value="{{minuto.minuto}}">{{minuto.minuto}}</option>
+                                    {% endfor %}
+                                </select>
+                                &nbsp; Hasta : 
+                                <select id="hora_fin" class="form-control input w-18">
+                                    {% for hora in lista_horas %}
+                                    <option value="{{hora.hora}}">{{hora.hora}}</option>
+                                    {% endfor %}
+                                </select>
+                                <select id="minuto_fin" class="form-control input w-18">
+                                    {% for minuto in lista_minutos %}
+                                    <option value="{{minuto.minuto}}">{{minuto.minuto}}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <tr class="back2">
+                            <td class="w-30 right font14">
+                                Actividad&nbsp;
+                            </td>
+                            <td class="w-70 left">
+                                <select id="actividad_id" class="form-control input h-35">
+                                    {% for actividad in lista_actividades %}
+                                    <option value="{{actividad.actividad_id}}">{{actividad.actividad}}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <tr class="back1">
+                            <td class="w-30 h-40 right font14">
+                                Detalle&nbsp;
+                            </td>
+                            <td class="w-70 left">
+                                <input type="text" autocomplete="off" class="form-control input w-95 left" id="detalle_actividad">
+                            </td>
+                        </tr>
+                        <tr class="back2">
+                            <td colspan="2" class="w-100 h-40 center font14">
+                                {% if user_perfil.perfil_id.perfil_id == perfil_departamento %}
+                                <button class="btn btn-primary btn-sm" id="btn_solicitar_actividad" onclick="calendarioRegistrarActividad();">
+                                    <i class="nav-icon fas fa-save"></i>&nbsp;&nbsp;Solicitar
+                                </button>
+                                {% else %}
+                                <button class="btn btn-primary btn-sm" id="btn_solicitar_actividad" onclick="calendarioRegistrarActividad();">
+                                    <i class="nav-icon fas fa-save"></i>&nbsp;&nbsp;Registrar
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        
+                        <tr class="back1">
+                            <td colspan="2" class="w-100 h-40 center font14">
+                                <div id="div_resultado_actividad">&nbsp;</div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            
+            <tr>
+                <td class="w-100 right">
+                    <button class="btn btn-secondary btn-sm" name="button_volver" id="button_volver" data-dismiss="modal">
+                        <i class="nav-icon fas fa-arrow-left"></i>&nbsp;&nbsp;Volver
+                    </button>
+                </td>
+            </tr>
+        </table>
+        </div>
+    </div>
+    </div>
+    
+    <!--modal confirmar actividad-->
+    <div class="modal fade" id="modalConfirmar" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document" id="modalConfirmarPosition">
+            <div class="modal-content">
+                <div class="modal-header modal_bg_primary h-45 v-top" id="modalHeaderConfirmar">
+                    <b>Actividad, <span id="span_confirmar_fecha">01-Ene</span></b>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                </div>
+                
+            <table class="table_calendario w-100">
+                <tr class="back">
+                    <td class="w-100 left">
+                        <table class="table_calendario w-100">
+                            <tr class="back2">
+                                <td class="w-30 right font14">
+                                    Dpto&nbsp;
+                                </td>
+                                <td class="w-70 left font14">
+                                    <span id="span_confirmar_departamento">departamento</span>
+                                </td>
+                            </tr>
+                            <tr class="back1 h-40">
+                                <td class="w-30 right font14">
+                                    Horario&nbsp;
+                                </td>
+                                <td class="w-70 left font14">
+                                    <span id="span_confirmar_hora_ini">inicio</span> hasta <span id="span_confirmar_hora_fin">fin</span>
+                                </td>
+                            </tr>
+                            <tr class="back2">
+                                <td class="w-30 right font14">
+                                    Actividad&nbsp;
+                                </td>
+                                <td class="w-70 left font14">
+                                    <span id="span_confirmar_actividad">actividad</span>
+                                </td>
+                            </tr>
+                            <tr class="back1">
+                                <td class="w-30 h-40 right font14">
+                                    Detalle&nbsp;
+                                </td>
+                                <td class="w-70 left font14">
+                                    <span id="span_confirmar_detalle">detalle</span>
+                                </td>
+                            </tr>
+                            <tr class="back2">
+                                <td colspan="2" class="w-100 h-40 center font14">
+                                    {% if user_perfil.perfil_id.perfil_id != perfil_departamento %}
+                                        {% if permisos.adicionar %}
+                                        <button class="btn btn-primary btn-sm" id="btn_confirmar_confirmar" onclick="calendarioConfirmarSuccess();">
+                                            <i class="nav-icon fas fa-save"></i>&nbsp;&nbsp;Confirmar
+                                        </button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if permisos.eliminar %}
+                                    <button class="btn btn-danger btn-sm" id="btn_confirmar_eliminar" onclick="calendarioEliminarActividad();">
+                                        <i class="nav-icon far fa-times-circle"></i>&nbsp;&nbsp;Eliminar
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            
+                            <tr class="back1">
+                                <td colspan="2" class="w-100 h-40 center font14">
+                                    <div id="div_resultado_confirmar">&nbsp;</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="w-100 right">
+                        <button class="btn btn-secondary btn-sm" data-dismiss="modal">
+                            <i class="nav-icon fas fa-arrow-left"></i>&nbsp;&nbsp;Volver
+                        </button>
+                    </td>
+                </tr>
+            </table>
+            </div>
+        </div>
+        </div>
+        
+    <!--fin div contenedor-->
+    <div class="col-sm-2">&nbsp;</div>
+</div>
+
+<BR><BR>
+<form name="form_order" method="post" action="">
+    {% csrf_token %}
+    <input type="hidden" name="{{session.variable_order}}" value="{{session|get_item:session.variable_order}}">
+    <input type="hidden" name="{{session.variable_order_type}}" value="{{session|get_item:session.variable_order_type}}">
+</form>
+<form name="form_operation" method="post" action="{{url_main}}">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="module_x2" value="{{module_x2}}">
+    <input type="hidden" name="module_x3" value="{{module_x3}}">
+    
+    <input type="hidden" name="operation_x" value="{{operation_x}}">
+    <input type="hidden" name="operation_x2" value="{{operation_x2}}">
+    <input type="hidden" name="operation_x3" value="{{operation_x3}}">
+    
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" name="id2" value="{{id2}}">
+    <input type="hidden" name="id3" value="{{id3}}">
+</form>
+
+<form name='form_registrar_actividad' method="POST" action="{{url_main}}">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="operation_x" value="registrar_actividad">
+    
+    {% if user_perfil.perfil_id.perfil_id == perfil_departamento %}
+    <input type="hidden" name="departamento_usuario" value="{{departamento.departamento}}">
+    {% else %}
+    <input type="hidden" name="departamento_usuario" value="">
+    {% endif %}
+    <input type="hidden" name="user_id_dpto" value="">
+    <input type="hidden" name="perfil_dpto" value="{{user_perfil.perfil_id.perfil_id}}">
+    
+    <input type="hidden" name="hora_ini" value="">
+    <input type="hidden" name="minuto_ini" value="">
+    <input type="hidden" name="hora_fin" value="">
+    <input type="hidden" name="minuto_fin" value="">
+    <input type="hidden" name="actividad" value="">
+    <input type="hidden" name="dia" value="">
+    <input type="hidden" name="detalle" value="">
+</form>
+
+<form name='form_confirmar_actividad' method="POST" action="{{url_main}}">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="operation_x" value="confirmar_actividad">
+    
+    <input type="hidden" name="id" value="">
+</form>
+
+<form name='form_anular_actividad' method="POST" action="{{url_main}}">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="operation_x" value="anular_actividad">
+    
+    <input type="hidden" name="departamento" value="">
+    <input type="hidden" name="actividad" value="">
+    <input type="hidden" name="hora_ini" value="">
+    <input type="hidden" name="hora_fin" value="">
+    <input type="hidden" name="user_id_dpto" value="">
+    <input type="hidden" name="fecha" value="">
+    
+    <input type="hidden" name="id" value="">
+</form>
+
+</div>

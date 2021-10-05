@@ -1,0 +1,203 @@
+{% load jinja_tags %}
+{% load static %}
+
+<div class="row align-items-center">
+    <div class="col-sm-2">&nbsp;</div>
+    <div class="col-sm-8">
+        <!--div contenedor-->
+        <br>
+        <!--alerts-->
+        {% include 'partials/_alerts.html' %}
+
+        <form name="search" method="post" action="">
+            {% csrf_token %}
+            <table class="table3 w-100">
+                <tr>
+                    <th class="w-100 center" colspan="4">
+                        Opciones de Busqueda
+                    </th>
+                </tr>
+
+                <tr class="back1">
+                    <td class="right w-20">
+                        Dpto&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <input type="text" name="search_departamento" id="search_departamento" class="form-control input w-80" value="{{ session.search_departamento }}" autocomplete="off">
+                    </td>
+                    <td class="right w-20">
+                        &nbsp;
+                    </td>
+                    <td class="left w-30">
+                        &nbsp;
+                    </td>
+                </tr>
+
+                <tr class="back2">
+                    <td colspan="4" class="center w-100">
+                        <button class="btn btn-primary btn-sm" name="search_button" onclick="sendSearchCalendario();">
+                            <i class="nav-icon fas fa-search"></i>&nbsp;&nbsp;Buscar
+                        </button>
+                        <input type="hidden" name="search_button_x" value="acc">
+                        <input type="hidden" name="module_x" value="{{module_x}}">
+                        <input type="hidden" name="search_periodo" value="{{periodo_actual}}">
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <br>
+        
+        <table class="w-100 center">
+            <tr>
+                <td class="w-96 h-40 v-middle">
+                    Mes: {{periodo_actual|get_show_periodo}}
+                </td>
+                <td class="w-2 center h-40 v-middle">
+                    <button class="btn btn-primary btn-sm h-30" name="btn_ant" onclick="calendarioSearchPeriodo('{{periodo_ant}}');">
+                        <i class="nav-icon fas fa-angle-left">&nbsp;</i>
+                    </button>
+                </td>
+                <td class="w-2 center h-40 v-middle">
+                    <button class="btn btn-primary btn-sm h-30" name="btn_next" onclick="calendarioSearchPeriodo('{{periodo_next}}');">
+                        <i class="nav-icon fas fa-angle-right">&nbsp;</i>
+                    </button>
+                </td>
+            </tr>
+        </table>
+        <form name="formulario" method="POST" action="" onsubmit="return false;">
+            <table class="table_calendario w-100">
+                <tr>
+                    <th class="w-14 center">
+                        Lun
+                    </th>
+                    <th class="w-14 center">
+                        Mar
+                    </th>
+                    <th class="w-14 center">
+                        Mie
+                    </th>
+                    <th class="w-14 center">
+                        Jue
+                    </th>
+                    <th class="w-14 center">
+                        Vie
+                    </th>
+                    <th class="w-15 center">
+                        Sab
+                    </th>
+                    <th class="w-15 center">
+                        Dom
+                    </th>
+                </tr>
+
+                {% for semana in calendario %}
+                {% with lunes=semana.0 martes=semana.1 miercoles=semana.2 jueves=semana.3 viernes=semana.4 sabado=semana.5 domingo=semana.6 %}
+                <tr class="back{{forloop.counter|back_class}}"></tr>
+                    <td class="center w-14">
+                        {% if lunes.existe == 1 %}
+                        <table class="table_calendario_interno w-100">
+                            <tr>
+                               <td class="calendario_dia right w-100 v-top">
+                                {{lunes.dia}}
+                               </td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                    </td>
+                    <td class="center w-14">
+                        {% if martes.existe == 1 %}
+                        <table class="table_calendario_interno w-100">
+                            <tr>
+                               <td class="calendario_dia right w-100 v-top">
+                                {{martes.dia}}
+                               </td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                    </td>
+                    <td class="center w-14">
+                        {% if miercoles.existe == 1 %}
+                        <table class="table_calendario_interno w-100">
+                            <tr>
+                               <td class="calendario_dia right w-100 v-top">
+                                {{miercoles.dia}}
+                               </td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                    </td>
+                    <td class="center w-14">
+                        {% if jueves.existe == 1 %}
+                        <table class="table_calendario_interno w-100">
+                            <tr>
+                               <td class="calendario_dia right w-100 v-top">
+                                {{jueves.dia}}
+                               </td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                    </td>
+                    <td class="center w-14">
+                        {% if viernes.existe == 1 %}
+                        <table class="table_calendario_interno w-100">
+                            <tr>
+                               <td class="calendario_dia right w-100 v-top">
+                                {{viernes.dia}}
+                               </td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                    </td>
+                    <td class="center w-15">
+                        {% if sabado.existe == 1 %}
+                        <table class="table_calendario_interno w-100">
+                            <tr>
+                               <td class="calendario_dia right w-100 v-top">
+                                {{sabado.dia}}
+                               </td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                    </td>
+                    <td class="center w-15">
+                        {% if domingo.existe == 1 %}
+                        <table class="table_calendario_interno w-100">
+                            <tr>
+                               <td class="calendario_dia right w-100 v-top">
+                                {{domingo.dia}}
+                               </td>
+                            </tr>
+                        </table>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </table>
+        </form>
+    </div>
+    <!--fin div contenedor-->
+    <div class="col-sm-2">&nbsp;</div>
+</div>
+
+<BR><BR>
+<form name="form_order" method="post" action="">
+    {% csrf_token %}
+    <input type="hidden" name="{{session.variable_order}}" value="{{session|get_item:session.variable_order}}">
+    <input type="hidden" name="{{session.variable_order_type}}" value="{{session|get_item:session.variable_order_type}}">
+</form>
+<form name="form_operation" method="post" action="{{url_main}}">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="module_x2" value="{{module_x2}}">
+    <input type="hidden" name="module_x3" value="{{module_x3}}">
+    
+    <input type="hidden" name="operation_x" value="{{operation_x}}">
+    <input type="hidden" name="operation_x2" value="{{operation_x2}}">
+    <input type="hidden" name="operation_x3" value="{{operation_x3}}">
+    
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" name="id2" value="{{id2}}">
+    <input type="hidden" name="id3" value="{{id3}}">
+</form>
+</div>

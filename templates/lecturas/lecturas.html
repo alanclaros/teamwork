@@ -1,0 +1,319 @@
+{% load jinja_tags %}
+{% load static %}
+
+<div class="row align-items-center">
+    <div class="col-sm-2">&nbsp;</div>
+    <div class="col-sm-8">
+        <!--div contenedor-->
+        <br>
+        <!--alerts-->
+        {% include 'partials/_alerts.html' %}
+
+        <form name="search" method="post" action="">
+            {% csrf_token %}
+            <table class="table3 w-100">
+                <tr>
+                    <th class="w-100 center" colspan="4">
+                        Opciones de Busqueda
+                    </th>
+                </tr>
+
+                <tr class="back1">
+                    <td class="right w-20">
+                        Apellidos&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <input type="text" name="search_apellidos" id="search_apellidos" class="form-control input w-80" value="{{ session.search_apellidos }}" autocomplete="off">
+                    </td>
+                    <td class="right w-20">
+                        Nombres&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <input type="text" name="search_nombres" id="search_nombres" class="form-control input w-80" value="{{ session.search_nombres }}" autocomplete="off">
+                    </td>
+                </tr>
+                
+                <tr class="back2">
+                    <td class="right w-20">
+                        Bloque&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="search_bloque" id="search_bloque" class="form-control h-35 input w-90">
+                            <option value="0">---</option>
+                            {% for bloque in bloques %}
+                            <option value="{{bloque.bloque_id}}" {% if session.search_bloque|add:0 == bloque.bloque_id %}selected{% endif %}>{{bloque.bloque}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="right w-20">
+                        Piso&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="search_piso" id="search_piso" class="form-control h-35 input w-90">
+                            <option value="0">---</option>
+                            {% for piso in pisos %}
+                            <option value="{{piso.piso_id}}" {% if session.search_piso|add:0 == piso.piso_id %}selected{% endif %}>{{piso.piso}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                
+                <tr class="back1">
+                    <td class="right w-20">
+                        Periodo&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select onchange="sendSearchLectura();" name="search_periodo" id="search_periodo" class="form-control h-35 input w-90">
+                            {% for periodo in periodos %}
+                            <option value="{{periodo}}" {% if session.search_periodo == periodo %}selected{% endif %}>{{periodo|get_show_periodo}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="right w-20">
+                        Dpto.&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <input type="text" name="search_departamento" id="search_departamento" class="form-control input w-80" value="{{ session.search_departamento }}" autocomplete="off">
+                    </td>
+                </tr>
+
+                <tr class="back2">
+                    <td colspan="4" class="center w-100">
+                        <button class="btn btn-primary btn-sm" name="search_button" onclick="sendSearchLectura();">
+                            <i class="nav-icon fas fa-search"></i>&nbsp;&nbsp;Buscar
+                        </button>
+                        <input type="hidden" name="search_button_x" value="acc">
+                        <input type="hidden" name="module_x" value="{{module_x}}">
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <br>
+        
+        <form name="formulario_periodo" method="post" action="" onsubmit="return false;">
+            {% csrf_token %}
+            <div class="card card-primary {% if cantidad_cmp > 0 %}collapsed-card{% endif %}">
+                <div class="card-header back_tabs">
+                    Cobros Mensuales : {{periodo_session_show}}
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-{% if cantidad_cmp > 0 %}plus{% else %}minus{% endif %}"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body w-100 card_body_width">
+                    <table class="table3 w-100">
+                        {% for cobro_mensual in lista_cobros_mensuales %}
+                        <tr class="back{{forloop.counter|back_class_color:cobro_mensual.status_id.status_id}}">
+                            <td class="left w-70">
+                                <div class="custom-control custom-checkbox">
+                                    <input class="custom-control-input" type="checkbox" id="cobro_mensual_{{cobro_mensual.cobro_mensual_id}}" name="cobro_mensual_{{cobro_mensual.cobro_mensual_id}}" {% if cobro_mensual.cobro_mensual_periodo_id > 0 %}checked{% endif %}>
+                                    <label for="cobro_mensual_{{cobro_mensual.cobro_mensual_id}}" class="custom-control-label">{{cobro_mensual.cobro_mensual}}</label>
+                                </div>
+                            </td>
+                            <td class="left w-30">
+                                <input type="text" autocomplete="off" value="{{cobro_mensual.monto_cobrar}}" class="form-control input right w-90" name="monto_cobrar_{{cobro_mensual.cobro_mensual_id}}" id="monto_cobrar_{{cobro_mensual.cobro_mensual_id}}" onkeyup="validarNumeroPunto(this);txtValid(this);" onblur="txtValid(this);">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="back2">
+                            <td colspan="2" class="center w-100">
+                                <button class="btn btn-primary btn-sm" name="add_button" onclick="sendFormLectura('periodo', '');">
+                                    <i class="nav-icon fas fa-save"></i>&nbsp;&nbsp;Guardar Datos Periodo
+                                </button>
+                                <input type="hidden" id="url_main" value="{{url_main}}">
+                                <input type="hidden" name="cobros_mensuales_ids" value="{{cobros_mensuales_ids}}">
+                                <input type="hidden" name="cantidad_cm_periodo" value="{{cantidad_cm_periodo}}">
+                                
+                                <input type="hidden" id="operation_x" name="operation_x" value="save_data_periodo">
+                                <input type="hidden" name="module_x" value="{{module_x}}">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </form>
+        
+        {% if cantidad_cmp > 0 %}
+        <!--paginacion-->
+        {% include 'partials/pagination.html' %}
+
+        {%if permisos.modificar == 1 %}
+        <table class="tabla w-100">
+            <td class="right w-100">
+                <button class="btn btn-primary btn-sm" name="add_btn_x" id="add_btn_x" onclick="sendFormLectura(operation='save', '');">
+                    <i class="nav-icon fas fa-save"></i>&nbsp;&nbsp;Guardar Datos
+                </button>
+            </td>
+        </table>
+        <br>
+        {% endif %}
+        <form name="formulario" method="post" action="" onsubmit="return false;">
+            {% csrf_token %}
+        <table class="table3 w-100">
+            <tr>
+                <th class="w-15 minw-60 pointer left" {% with cabecera=columnas.0 %} {% include 'partials/cabecera_columna.html' %} {% endwith %}>
+                    {% with cabecera=columnas.0 %}
+                    Dpto{% include 'partials/titulo_columna.html' %}
+                    {% endwith %}
+                </th>
+                <th class="w-15 minw-80 pointer left" {% with cabecera=columnas.1 %} {% include 'partials/cabecera_columna.html' %} {% endwith %}>
+                    {% with cabecera=columnas.1 %}
+                    Propietario{% include 'partials/titulo_columna.html' %}
+                    {% endwith %}
+                </th>
+                <th class="w-10 minw-40 left">
+                    Ant
+                </th>
+                <th class="w-10 minw-50 left">
+                    Act
+                </th>
+                <th class="w-10 minw-40 left">
+                    CM3
+                </th>
+                <th class="w-10 minw-50 left">
+                    Cons
+                </th>
+                <th class="w-10 minw-50 left">
+                    Mens
+                </th>
+                <th class="w-10 minw-50 left">
+                    Manu
+                </th>
+                <th class="w-10 minw-50 left">
+                    Total
+                </th>
+            </tr>
+
+            {% for lectura in lecturas %}
+            {% with dpid=lectura.departamento_id %}
+            <tr class="back{{forloop.counter|back_class_color:lectura.status_id}}">
+                <td class="left w-15">
+                    {{lectura.departamento}}
+                </td>
+                <td class="left w-15">
+                    {{lectura.apellidos}}
+                </td>
+                <td class="left w-10">
+                    <input type="text" value="{{lectura.lectura_anterior}}" readonly="readonly{% if lectura.status_id == cobrado %}_cobrado{% endif %}" name="lectura_anterior_{{dpid}}" id="lectura_anterior_{{dpid}}" class="form-control input w-99 right">
+                </td>
+                <td class="left w-10">
+                    {% if lectura.status_id == cobrado %}
+                        <input type="text" readonly="readonly_cobrado" class="form-control input right w-99" name="lectura_{{dpid}}" id="lectura_{{dpid}}" value="{{lectura.lectura}}">
+                    {% else %}
+                        <input type="text" autocomplete="off" class="form-control input right w-99" name="lectura_{{dpid}}" id="lectura_{{dpid}}" onkeyup="validarNumeroPunto(this);txtValid(this);lecturaCalcularConsumo('{{dpid}}');lecturaTotal('{{dpid}}');" onblur="txtValid(this);" value="{{lectura.lectura}}" onfocus="this.select();">
+                    {% endif %}
+                    <input type="hidden" name="metros2_{{dpid}}" id="metros2_{{dpid}}" value="{{lectura.lectura_metros2}}">
+                    <input type="hidden" name="costo_expensas_{{dpid}}" id="costo_expensas_{{dpid}}" value="{{lectura.costo_expensas_m2}}">
+                    <input type="hidden" name="total_expensas_{{dpid}}" id="total_expensas_{{dpid}}" value="{{lectura.total_expensas}}">
+                </td>
+                <td class="left w-10">
+                    <input type="text" readonly="readonly{% if lectura.status_id == cobrado %}_cobrado{% endif %}" class="form-control input right w-99" name="costo_m3_{{dpid}}" id="costo_m3_{{dpid}}" value="{{lectura.costo_m3}}">
+                </td>
+                <td class="left w-10">
+                    <input type="text" readonly="readonly{% if lectura.status_id == cobrado %}_cobrado{% endif %}" class="form-control input right w-99" name="consumo_{{dpid}}" id="consumo_{{dpid}}" value="{{lectura.consumo}}">
+                </td>
+                <td class="left w-10">
+                    <input type="text" readonly="readonly{% if lectura.status_id == cobrado %}_cobrado{% endif %}" class="form-control input right w-99" name="total_mensuales_{{dpid}}" id="total_mensuales_{{dpid}}" value="{{lectura.total_mensuales}}" {% if lectura.status_id != cobrado %}onfocus="showCMD('mensuales_{{dpid}}');"{% endif %}>
+                    {% if lectura.status_id != cobrado %}
+                    <div id="mensuales_{{dpid}}" style="display: none;">
+                        <table class="tablab w-100 minw-170">
+                            {% for co_me in lectura.lista_cobros_mensuales %}
+                            <tr>
+                                <td class="w-100">
+                                    <input type="checkbox" onchange="lecturaCheckMensual('{{dpid}}');lecturaTotal('{{dpid}}');" name="me_chk_{{dpid}}_{{co_me.cobro_mensual_id}}" id="me_chk_{{dpid}}_{{co_me.cobro_mensual_id}}" 
+                                    {% if co_me.cobro_cobro_mensual_id > 0 %}checked{% endif %}> {{co_me.cobro_mensual}} ({{co_me.monto_bs}})
+                                    <input type="hidden" name="me_val_{{dpid}}_{{co_me.cobro_mensual_id}}" id="me_val_{{dpid}}_{{co_me.cobro_mensual_id}}" value="{{co_me.monto_bs}}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="back1">
+                                <td class="w-100 center">
+                                    <input type="button" class="btn btn-primary btn-xs btn_search" value="&nbsp;&nbsp;OK&nbsp;&nbsp;" onclick="closeCMD('mensuales_{{dpid}}');">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    {% endif %}
+                </td>
+                <td class="left w-10">
+                    <input type="text" readonly="readonly{% if lectura.status_id == cobrado %}_cobrado{% endif %}" class="form-control input right w-99" name="total_manuales_{{dpid}}" id="total_manuales_{{dpid}}" value="{{lectura.total_manuales}}" {% if lectura.status_id != cobrado %}onfocus="showManuales('manuales_{{dpid}}');"{% endif %}>
+                    {% if lectura.status_id != cobrado %}
+                    <div id="manuales_{{dpid}}" style="display: none;">
+                        <table class="tablab w-100 minw-170">
+                            {% for co_ma in lectura.lista_cobros_manuales %}
+                            <tr>
+                                <td class="w-100">
+                                    <input type="checkbox" onchange="lecturaCheckManual('{{dpid}}');lecturaTotal('{{dpid}}');" name="ma_chk_{{dpid}}_{{co_ma.cobro_manual_id}}" id="ma_chk_{{dpid}}_{{co_ma.cobro_manual_id}}" 
+                                    {% if co_ma.cobro_cobro_manual_id > 0 %}checked{% endif %}> {{co_ma.cobro_manual}} ({{co_ma.monto_bs}}) {% if co_ma.monto_porcentaje == 'porcentaje' %}&#37;{% endif %}
+                                    <input type="hidden" name="ma_val_{{dpid}}_{{co_ma.cobro_manual_id}}" id="ma_val_{{dpid}}_{{co_ma.cobro_manual_id}}" value="{{co_ma.monto_bs}}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="back1">
+                                <td class="w-100 center">
+                                    <input type="button" class="btn btn-primary btn-xs btn_search" value="&nbsp;&nbsp;OK&nbsp;&nbsp;" onclick="closeManuales('manuales_{{dpid}}');">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    {% endif %}
+                </td>
+                <td class="left w-10">
+                    <input type="text" readonly="readonly{% if lectura.status_id == cobrado %}_cobrado{% endif %}" class="form-control input right w-99" name="monto_bs_{{dpid}}" id="monto_bs_{{dpid}}" value="{{lectura.monto_bs}}">
+                </td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+        </table>
+        <input type="hidden" id="url_main" value="{{url_main}}">
+        <input type="hidden" id="cobros_mensuales_ids" value="{{cobros_mensuales_ids}}">
+        <input type="hidden" id="cobros_manuales_ids" value="{{cobros_manuales_ids}}">
+        <input type="hidden" id="cantidad_cm_periodo" value="{{cantidad_cm_periodo}}">
+        <input type="hidden" id="departamentos_ids" value="{{departamentos_ids}}">
+        
+        <input type="hidden" id="costo_m3" name="costo_m3" value="{{costo_m3}}">
+        <input type="hidden" id="expensas_monto_m2" name="expensas_monto_m2" value="{{expensas_monto_m2}}">
+        <input type="hidden" id="costo_minimo" name="costo_minimo" value="{{costo_minimo}}">
+        <input type="hidden" id="unidad_minima_m3" name="unidad_minima_m3" value="{{unidad_minima_m3}}">
+        
+        <input type="hidden" id="operation_x" name="operation_x" value="save_data">
+        <input type="hidden" name="module_x" value="{{module_x}}">
+        </form>
+        <br>
+        {% if permisos.modificar == 1 %}
+        <table class="tabla w-100">
+            <td class="right w-100">
+                <button class="btn btn-primary btn-sm" name="add_btn_x2" id="add_btn_x2" onclick="sendFormLectura(operation='save', '');">
+                    <i class="nav-icon fas fa-save"></i>&nbsp;&nbsp;Guardar Datos
+                </button>
+            </td>
+        </table>
+        <br>
+        {% endif %}
+        {% endif %}{# if cant_cmp > 0 #}
+    </div>
+    <!--fin div contenedor-->
+    <div class="col-sm-2">&nbsp;</div>
+</div>
+
+<BR><BR>
+<form name="form_order" method="post" action="">
+    {% csrf_token %}
+    <input type="hidden" name="{{session.variable_order}}" value="{{session|get_item:session.variable_order}}">
+    <input type="hidden" name="{{session.variable_order_type}}" value="{{session|get_item:session.variable_order_type}}">
+</form>
+<form name="form_operation" method="post" action="{{url_main}}">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="module_x2" value="{{module_x2}}">
+    <input type="hidden" name="module_x3" value="{{module_x3}}">
+    
+    <input type="hidden" name="operation_x" value="{{operation_x}}">
+    <input type="hidden" name="operation_x2" value="{{operation_x2}}">
+    <input type="hidden" name="operation_x3" value="{{operation_x3}}">
+    
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" name="id2" value="{{id2}}">
+    <input type="hidden" name="id3" value="{{id3}}">
+</form>
+</div>

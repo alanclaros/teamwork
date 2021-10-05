@@ -1,0 +1,125 @@
+{% load jinja_tags %}
+{% load static %}
+
+<!--contenedor-->
+<div class="row align-items-center">
+    <div class="col-sm-2">&nbsp;</div>
+    <div class="col-sm-8">
+        <!--contenido-->
+        <!--alerts-->
+        {% include 'partials/_alerts.html' %}
+        <br>
+
+        <div class="link_blue right">
+            <span class="link_blue pointer" onclick="backWindow();">Volver</span>
+        </div>
+        <br>
+
+        <form name="formulario" method="post" action="" onsubmit="return false;">
+            {% csrf_token %}
+            <table class="table3 w-100">
+                <tr>
+                    <th colspan="4" class="center w-100">
+                        Cobros Pendientes
+                    </th>
+                </tr>
+
+                <tr class="back1">
+                    <td class="right w-20">
+                        Bloque&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="bloque" id="bloque" class="form-control input w-90 h-35">
+                            <option value="0">(TODOS)</option>
+                            {% for bloque in lista_bloques %}
+                            <option value="{{bloque.bloque_id}}">{{bloque.bloque}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="right w-20">
+                        Piso&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="piso" id="piso" class="form-control input w-90 h-35">
+                            <option value="0">(TODOS)</option>
+                            {% for piso in lista_pisos %}
+                            <option value="{{piso.piso_id}}">{{piso.piso}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+
+                <tr class="back2">
+                    <td class="right w-20">
+                        Inicio&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="periodo_ini" id="periodo_ini" class="form-control h-35 input w-90">
+                            {% for periodo in lista_periodos %}
+                            <option value="{{periodo}}">{{periodo|get_show_periodo}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="right w-20">
+                        Fin&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="periodo_fin" id="periodo_fin" class="form-control h-35 input w-90">
+                            {% for periodo in lista_periodos %}
+                            <option value="{{periodo}}">{{periodo|get_show_periodo}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+
+                <tr class="back2">
+                    <td colspan="4" class="w-100 center">&nbsp;</td>
+                </tr>
+                <tr class="back1">
+                    <td colspan="4" class="w-100 center">
+                        <button class="btn btn-primary btn-sm" name="add_button" onclick="reportesCobrosPendientes('print');">
+                            <i class="nav-icon far fa-clone"></i>&nbsp;&nbsp;Mostrar
+                        </button>
+                        <input type="hidden" name="url_main" id="url_main" value="{{url_main}}">
+                        <input type="hidden" name="url_actual" id="url_actual" value="{{url_actual}}">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <button class="btn btn-primary btn-sm" name="add_button2" onclick="reportesCobrosPendientes('print_excel');">
+                            <i class="nav-icon far fa-file-excel"></i>&nbsp;&nbsp;Excel
+                        </button>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <br>
+    </div>
+    <!--fin div contenido-->
+    <div class="col-sm-2">&nbsp;</div>
+</div>
+<!--fin div contenedor-->
+<form name="form_print" method="post" action="" target="_blank">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="operation_x" value="{{operation_x}}">
+    <input type="hidden" name="operation_x2" value="">
+    <input type="hidden" name="id" value="">
+    <input type="hidden" name="periodo_ini" value="">
+    <input type="hidden" name="periodo_fin" value="">
+    <input type="hidden" name="bloque" value="">
+    <input type="hidden" name="piso" value="">
+    <input type="hidden" name="type" value="pdf">
+</form>
+
+<form name="form_operation" method="post" action="{{url_main}}">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="module_x2" value="{{module_x2}}">
+    <input type="hidden" name="module_x3" value="{{module_x3}}">
+    
+    <input type="hidden" name="operation_x" value="{{operation_x}}">
+    <input type="hidden" name="operation_x2" value="{{operation_x2}}">
+    <input type="hidden" name="operation_x3" value="{{operation_x3}}">
+    
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" name="id2" value="{{id2}}">
+    <input type="hidden" name="id3" value="{{id3}}">
+</form>

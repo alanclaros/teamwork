@@ -1,0 +1,25 @@
+{% load jinja_tags %}
+{% load static %}
+<div id="div_detalles" class="w-100">
+<table class="table3 w-100">
+    <tr>
+        <th class="w-70 left">
+            Detalle
+        </th>
+        <th class="w-30 right">
+            Monto
+        </th>
+    </tr>
+
+    {% for det in detalles %}
+    <tr class="back{{forloop.counter|back_class_color:det.status_id}}">
+        <td class="left w-70">
+            {{det.detalle}}
+        </td>
+        <td class="right w-30">
+            {{det.monto_bs}}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>

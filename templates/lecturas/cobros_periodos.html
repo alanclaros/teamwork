@@ -1,0 +1,135 @@
+{% load jinja_tags %}
+{% load static %}
+
+<form name="formulario_periodo" method="post" action="" onsubmit="return false;">
+    {% csrf_token %}
+    {% if tiene_caja == 0 %}
+    {% with title='Cajas!' body='Debe Tener una caja activa para hacer cobros' %}
+    {% include 'partials/_alert_info_cant_delete.html' %}
+    {% endwith %}
+    {% endif %}
+    {% include 'partials/_alerts.html' %}
+    
+<table class="table3 w-100">
+    <tr>
+        <th class="w-20 minw-60 left">
+            Periodo
+        </th>
+        <th class="w-20 minw-60 left">
+            F. Cobro
+        </th>
+        <th class="w-30 minw-40 left">
+            Detalle
+        </th>
+        <th class="w-15 minw-40 right">
+            Monto
+        </th>
+        <th class="w-15 minw-40 center">
+            Cobrar
+        </th>
+    </tr>
+
+    {% for cobro in lista_cobros %}
+    {% with cid=cobro.cobro_id backfila=forloop.counter|back_class_color:cobro.status_id %}
+    <tr class="pointer back{{backfila}}" id="periodo_{{cid}}" onclick="cobroDetallePeriodo('{{cid}}', '{{cobro.fecha_cobro|fecha_mostrar:"dd-MMM-yyyy"}}');cobroVerificarBotones('{{cid}}');">
+        <input type="hidden" id="backfila_periodo_{{cid}}" value="{{backfila}}">
+        <input type="hidden" id="estado_cobro_{{cid}}" value="{{cobro.status_id}}">
+        <td class="left w-20">
+            {{cobro.periodo|get_show_periodo}}
+        </td>
+        <td class="left w-20">
+            {{cobro.fecha_cobro|fecha_mostrar:"dd-MMM-yyyy"}}
+        </td>
+        <td class="left w-30">
+            {{cobro.detalle}}
+        </td>
+        <td class="right w-15">
+            {{cobro.monto_bs}}
+            <input type="hidden" id="monto_periodo_{{cid}}" value="{{cobro.monto_bs}}">
+        </td>
+        <td class="center w-15">
+            {% if cobro.status_id != cobrado %}
+            <div class="custom-control custom-checkbox">
+                <input class="custom-control-input" onchange="cobroCheckCobro();cobroCalcularCambio();cobroVerificarBotones('{{cid}}');" type="checkbox" id="chk_periodo_{{cid}}" name="chk_periodo_{{cid}}">
+                <label for="chk_periodo_{{cid}}" class="custom-control-label">&nbsp;</label>
+            </div>
+            {% endif %}
+        </td>
+    </tr>
+    {% endwith %}
+    {% endfor %}
+</table>
+<input type="hidden" id="lista_cobros_ids" value="{{lista_cobros_ids}}">
+<input type="hidden" id="tiene_caja" value="{{tiene_caja}}">
+<input type="hidden" id="periodo_seleccionado" value="">
+<input type="hidden" id="periodo_fecha_seleccionado" value="">
+</form>
+<br>
+<!--detalle-->
+<form name="formulario_detalle" method="post" action="" onsubmit="return false;">
+    {% csrf_token %}
+    <table class="w-100">
+        <tr>
+            <td class="w-50 left v-top">
+                {% with detalles=detalles %}
+                {% include 'lecturas/cobros_detalles.html' %}
+                {% endwith %}
+            </td>
+            <td class="w-50 right v-top">
+                <table class="table3 w-100">
+                    <tr>
+                        <th class="w-100 center">
+                            Cobro
+                        </th>
+                    </tr>
+                    <tr class="back1">
+                        <td class="w-100 right">
+                            Total : <input type="text" class="form-control input w-50 right" readonly="readonly" name="total_cobro" id="total_cobro" placeholder="0.00"> Bs.&nbsp;
+                        </td>
+                    </tr>
+                    <tr class="back2">
+                        <td class="w-100 right">
+                            Efectivo : <input type="text" class="form-control input right w-50" placeholder="0.00" name="efectivo" id="efectivo" autocomplete="off" onkeyup="validarNumeroPunto(this);cobroCalcularCambio();"> Bs.&nbsp;
+                        </td>
+                    </tr>
+                    <tr class="back1">
+                        <td class="w-100 right">
+                            Cambio : <input type="text" class="form-control input w-50 right" readonly="readonly" name="cambio" id="cambio" placeholder="0.00"> Bs.&nbsp;
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td class="w-50 left">
+                <div class="row">
+                    <div class="col-sm-4 center h-40">
+                        {% if permisos.imprimir %}
+                        <button class="btn btn-primary btn-sm w-90" disabled name="btn_imprimir" id="btn_imprimir" onclick="cobroImprimir();">
+                            <i class="nav-icon fas fa-print"></i>&nbsp;&nbsp;Imprimir
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="col-sm-4 center h-40">
+                        &nbsp;
+                    </div>
+                    <div class="col-sm-4 center h-40">
+                        {% if permisos.anular %}
+                        <button class="btn btn-primary btn-sm w-90" disabled name="btn_anular" id="btn_anular" onclick="sendFormCobro('anular');">
+                            <i class="nav-icon fas fa-ban"></i>&nbsp;&nbsp;Anular
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </td>
+            <td class="w-50 right v-top">
+                {% if permisos.adicionar %}
+                <button class="btn btn-primary btn-sm" disabled name="btn_cobrar" id="btn_cobrar" onclick="sendFormCobro('save');">
+                    <i class="nav-icon fas fa-dollar-sign"></i>&nbsp;&nbsp;Cobrar
+                </button>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</form>
+<br>

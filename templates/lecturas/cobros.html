@@ -1,0 +1,187 @@
+{% load jinja_tags %}
+{% load static %}
+
+<div class="row align-items-center">
+    <div class="col-sm-2">&nbsp;</div>
+    <div class="col-sm-8">
+        <!--div contenedor-->
+        <br>
+        <!--alerts-->
+        {% include 'partials/_alerts.html' %}
+
+        <form name="search" method="post" action="">
+            {% csrf_token %}
+            <table class="table3 w-100">
+                <tr>
+                    <th class="w-100 center" colspan="4">
+                        Opciones de Busqueda
+                    </th>
+                </tr>
+
+                <tr class="back1">
+                    <td class="right w-20">
+                        Apellidos&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <input type="text" name="search_apellidos" id="search_apellidos" class="form-control input w-80" value="{{ session.search_apellidos }}" autocomplete="off">
+                    </td>
+                    <td class="right w-20">
+                        Nombres&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <input type="text" name="search_nombres" id="search_nombres" class="form-control input w-80" value="{{ session.search_nombres }}" autocomplete="off">
+                    </td>
+                </tr>
+                
+                <tr class="back2">
+                    <td class="right w-20">
+                        Bloque&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="search_bloque" id="search_bloque" class="form-control h-35 input w-90">
+                            <option value="0">---</option>
+                            {% for bloque in bloques %}
+                            <option value="{{bloque.bloque_id}}" {% if session.search_bloque|add:0 == bloque.bloque_id %}selected{% endif %}>{{bloque.bloque}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="right w-20">
+                        Piso&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <select name="search_piso" id="search_piso" class="form-control h-35 input w-90">
+                            <option value="0">---</option>
+                            {% for piso in pisos %}
+                            <option value="{{piso.piso_id}}" {% if session.search_piso|add:0 == piso.piso_id %}selected{% endif %}>{{piso.piso}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                
+                <tr class="back1">
+                    <td class="right w-20">
+                        Dpto.&nbsp;
+                    </td>
+                    <td class="left w-30">
+                        <input type="text" name="search_departamento" id="search_departamento" class="form-control input w-80" value="{{ session.search_departamento }}" autocomplete="off">
+                    </td>
+                    <td colspan="2" class="left w-50">
+                        <button class="btn btn-primary btn-sm" name="search_button" onclick="sendSearchCobro();">
+                            <i class="nav-icon fas fa-search"></i>&nbsp;&nbsp;Buscar
+                        </button>
+                        <input type="hidden" name="search_button_x" value="acc">
+                        <input type="hidden" name="module_x" value="{{module_x}}">
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <br>
+        
+        <!--paginacion-->
+        {% include 'partials/pagination.html' %}
+        
+        <div class="w100 center v-middle h-35">Fecha: {{fecha_actual|fecha_mostrar:"dd-MMM-yyyy"}}</div>
+        <form name="formulario_dep" method="post" action="" onsubmit="return false;">
+            {% csrf_token %}
+        <table class="table3 w-100">
+            <tr>
+                <th class="w-20 minw-60 pointer left" {% with cabecera=columnas.0 %} {% include 'partials/cabecera_columna.html' %} {% endwith %}>
+                    {% with cabecera=columnas.0 %}
+                    Dpto{% include 'partials/titulo_columna.html' %}
+                    {% endwith %}
+                </th>
+                <th class="w-40 minw-80 pointer left" {% with cabecera=columnas.1 %} {% include 'partials/cabecera_columna.html' %} {% endwith %}>
+                    {% with cabecera=columnas.1 %}
+                    Propietario{% include 'partials/titulo_columna.html' %}
+                    {% endwith %}
+                </th>
+                <th class="w-20 minw-40 left">
+                    Bloque
+                </th>
+                <th class="w-20 minw-40 left">
+                    Piso
+                </th>
+            </tr>
+
+            {% for lectura in lecturas %}
+            {% with dpid=lectura.departamento_id backfila=forloop.counter|back_class_color:lectura.status_id %}
+            <tr class="pointer back{{backfila}}" id="fila_{{dpid}}" onclick="cobroSelectFila('{{dpid}}', '{{lectura.departamento}}', '{{lectura.user_dpto_id}}');">
+                <input type="hidden" id="backfila_{{dpid}}" value="{{backfila}}">
+                <td class="left w-20">
+                    {{lectura.departamento}}
+                </td>
+                <td class="left w-40">
+                    {{lectura.apellidos}} {{lectura.nombres}}
+                </td>
+                <td class="left w-20">
+                    {{lectura.bloque}}
+                </td>
+                <td class="left w-20">
+                    {{lectura.piso}}
+                </td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+        </table>
+        <input type="hidden" id="url_main" value="{{url_main}}">
+        <input type="hidden" id="departamentos_ids" value="{{departamentos_ids}}">
+        
+        <input type="hidden" id="operation_x" name="operation_x" value="">
+        <input type="hidden" name="module_x" value="{{module_x}}">
+        </form>
+        <br>
+        <div id="div_periodos">
+            &nbsp;
+        </div>
+        <br>
+        <br>
+    </div>
+    <!--fin div contenedor-->
+    <div class="col-sm-2">&nbsp;</div>
+</div>
+
+<BR><BR>
+<form name="formulario" method="POST" action="" onsubmit="return false;">
+    {% csrf_token %}
+    <input type="hidden" id="operation_x" name="operation_x" value="save_data">
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="cobros_cobrar" value="">
+    <input type="hidden" name="id" value="">
+    <input type="hidden" name="departamento" value="">
+    <input type="hidden" name="user_id_dpto" value="">
+</form>
+<form name="formulario_anular" method="POST" action="" onsubmit="return false;">
+    {% csrf_token %}
+    <input type="hidden" id="operation_x" name="operation_x" value="anular">
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="id" value="">
+    <input type="hidden" name="motivo_anula" value="">
+    <input type="hidden" name="id_anula" value="">
+</form>
+<form name="form_print" method="post" action="{{url_main}}" target="_blank">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="operation_x" value="">
+    <input type="hidden" name="id" value="">
+</form>
+    
+<form name="form_order" method="post" action="">
+    {% csrf_token %}
+    <input type="hidden" name="{{session.variable_order}}" value="{{session|get_item:session.variable_order}}">
+    <input type="hidden" name="{{session.variable_order_type}}" value="{{session|get_item:session.variable_order_type}}">
+</form>
+<form name="form_operation" method="post" action="{{url_main}}">
+    {% csrf_token %}
+    <input type="hidden" name="module_x" value="{{module_x}}">
+    <input type="hidden" name="module_x2" value="{{module_x2}}">
+    <input type="hidden" name="module_x3" value="{{module_x3}}">
+    
+    <input type="hidden" name="operation_x" value="{{operation_x}}">
+    <input type="hidden" name="operation_x2" value="{{operation_x2}}">
+    <input type="hidden" name="operation_x3" value="{{operation_x3}}">
+    
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" name="id2" value="{{id2}}">
+    <input type="hidden" name="id3" value="{{id3}}">
+</form>
+</div>
